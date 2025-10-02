@@ -14,8 +14,12 @@ public class Queue {
     public boolean isEmpty() {
         return q.isEmpty();
     }
-
+    
     public int size() {
         return q.size();
+    }
+
+    public void clear(){
+        q.clear();
     }
 }
