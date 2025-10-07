@@ -2,6 +2,7 @@
 /shelf/
 /workspace.xml
 *.class
+*.class
 /bin/
 /out/
 /target/
