@@ -1,18 +1,19 @@
 package gui;
 
 import javax.swing.JPanel;
-import java.awt.Color;
-import java.awt.Graphics;
+import java.awt.*;
 import java.awt.event.KeyListener;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
-import java.awt.Font;
 import javax.swing.Timer;
 import java.io.File;
 
 import javax.imageio.ImageIO;
+
+import debug.Debug;
+import reader.FileReader;
 import reader.MapData;
 
 public class GamePanel extends JPanel implements KeyListener, ActionListener {
@@ -68,6 +69,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
   private long solutionEndTime;
 
   private final int SOLUTION_TIME_LIMIT = 15000;
+  private Debug debug;
 
   public GamePanel() {
     this.setBackground(Color.BLACK);
@@ -208,7 +210,16 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
       g.drawString("" + moves, 80, this.getHeight() - 12);
       g.drawString(progress + " / " + boxCount, 286, this.getHeight() - 12);
       g.drawString(this.solutionTimeString, this.getWidth() - 60, this.getHeight() - 12);
+
     }
+
+    if (debug == null)
+      debug = new Debug(this, map, items, playerRow, playerColumn);
+
+    debug.showDebugText(g);
+    debug.setPlayerCol(playerColumn);
+    debug.setPlayerRow(playerRow);
+    debug.update();
   }
 
   public void initiateFreePlay() {
@@ -290,24 +301,46 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     this.repaint();
   }
 
+  // Modified for debugging
+  // Mod: Allows player to walk during non freeplay and allows the usage of WASD
+
   @Override
   public void keyPressed(KeyEvent e) {
-    if (freePlay) {
-      switch (e.getKeyCode()) {
-        case KeyEvent.VK_UP:
-          executeMove(0);
-          break;
-        case KeyEvent.VK_DOWN:
-          executeMove(1);
-          break;
-        case KeyEvent.VK_LEFT:
-          executeMove(2);
-          break;
-        case KeyEvent.VK_RIGHT:
-          executeMove(3);
-          break;
-      }
-    } else if (waitingForSpace) {
+//    if (freePlay) {
+//
+//    }
+
+    switch (e.getKeyCode()) {
+      case KeyEvent.VK_W:
+        executeMove(0);
+        break;
+      case KeyEvent.VK_S:
+        executeMove(1);
+        break;
+      case KeyEvent.VK_A:
+        executeMove(2);
+        break;
+      case KeyEvent.VK_D:
+        executeMove(3);
+        break;
+      case KeyEvent.VK_R:
+        mResetState();
+
+      case KeyEvent.VK_UP:
+        executeMove(0);
+        break;
+      case KeyEvent.VK_DOWN:
+        executeMove(1);
+        break;
+      case KeyEvent.VK_LEFT:
+        executeMove(2);
+        break;
+      case KeyEvent.VK_RIGHT:
+        executeMove(3);
+        break;
+    }
+
+    if (waitingForSpace) {
       if (e.getKeyCode() == KeyEvent.VK_SPACE) {
         waitingForSpace = false;
         this.statusString = STATUS_WAITING_FOR_SOLUTION;
@@ -322,7 +355,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
           }
         }
 
-        solutionThread = new BotThread(columns, rows, mapDataCopy, itemsDataCopy);
+        solutionThread = new BotThread(columns, rows, mapDataCopy, itemsDataCopy, debug);
         solutionThread.start();
         solutionStartTime = System.nanoTime();
         solutionTimer = new Timer(SOLUTION_TIME_LIMIT, this);
@@ -403,4 +436,14 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
       this.repaint();
     }
   }
+
+
+  // For Debug: Resets the state to prevent from relaunching
+  private void mResetState() {
+    FileReader fileReader = new FileReader();
+    MapData mapData = fileReader.readFile("testmap");
+    loadMap(mapData);
+
+  }
+
 }
