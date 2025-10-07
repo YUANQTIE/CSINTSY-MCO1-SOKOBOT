@@ -444,6 +444,9 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     MapData mapData = fileReader.readFile("testmap");
     loadMap(mapData);
 
+    waitingForSpace = true;
+    statusString = STATUS_WAITING_FOR_SPACE;
+    solutionTimeString = "";
   }
 
 }
