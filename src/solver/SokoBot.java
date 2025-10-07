@@ -1,9 +1,8 @@
 package solver;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.PriorityQueue;
+import debug.Debug;
+
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -19,7 +18,7 @@ public class SokoBot {
     }
   }
 
-  private void search(int width, int height, char[][] mapData, char[][] itemsData) {
+  private String search(int width, int height, char[][] mapData, char[][] itemsData, Debug debug) {
     System.out.println("Searching...");
     PriorityQueue<Node> openQueue = new PriorityQueue<>(Comparator.comparingInt(Node::getFCost).thenComparing(Node::getHCost));
     HashSet<Node> closedSet = new HashSet<>();
@@ -28,8 +27,8 @@ public class SokoBot {
     ArrayList<Node> boxNodes = new ArrayList<>();
     ArrayList<Node> goalNodes = new ArrayList<>();
 
-
     configureMap(width, height, mapData, itemsData);
+    debug.update();
     for (int y = 0; y < mapData.length; y++) {
       for (int x = 0; x < mapData[0].length; x++) {
         Node node = new Node(x, y, mapData, itemsData);
@@ -78,8 +77,7 @@ public class SokoBot {
       System.out.println("Executed lazy insertion");
 
       if (currentNode == goalNode) {
-        trackPath(playerNode, goalNode);
-        return;
+        return trackPath(playerNode, goalNode);
       }
       System.out.println("Goal node checked: " + debugCoords(goalNode));
 
@@ -119,6 +117,7 @@ public class SokoBot {
       if (neighborExplored) System.out.println("Neighbors explored");
       else System.out.println("Neighbor failed to explore!");
     }
+    return "";
   }
 
 
@@ -126,7 +125,7 @@ public class SokoBot {
     return "(" + node.getCol() + ", " + node.getRow() + ")";
   }
 
-  private void trackPath(Node startNode, Node goalNode) {
+  private String trackPath(Node startNode, Node goalNode) {
     ArrayList<Node> paths = new ArrayList<>();
     paths.add(goalNode);
 
@@ -136,14 +135,45 @@ public class SokoBot {
       currentNode = currentNode.getParent();
     }
     paths.add(startNode);
-    System.out.println("\n\nPATH TRACKED: " + paths.reversed().stream().map(this::debugCoords).toList());
+
+    Collections.reverse(paths);
+
+    // Generate moves from path
+    String moves = generateMoves(paths);
+    System.out.println("\n\nPATH TRACKED: " + paths.stream().map(this::debugCoords).toList());
+    System.out.println("MOVES: " + moves);
+    return moves;
+  }
+
+  private String generateMoves(ArrayList<Node> paths) {
+    StringBuilder moves = new StringBuilder();
+    for (int i = 0; i < paths.size() - 1; i++) {
+      Node path = paths.get(i);
+      int x1 = path.getCol();
+      int y1 = path.getRow();
+
+      Node nextPath = paths.get(i + 1);
+      int x2 = nextPath.getCol();
+      int y2 = nextPath.getRow();
+
+      if (y2 > y1) {
+        moves.append("d");
+      } else if (y2 < y1) {
+        moves.append("u");
+      } else if (x2 > x1) {
+        moves.append("r");
+      } else if (x2 < x1) {
+        moves.append("l");
+      }
+    }
+    return moves.toString();
   }
 
   public int heuristic(int x1, int x2, int y1, int y2) {
     return Math.abs(x1 - x2) + Math.abs(y1 - y2);
   }
 
-  public String solveSokobanPuzzle(int width, int height, char[][] mapData, char[][] itemsData) {
+  public String solveSokobanPuzzle(int width, int height, char[][] mapData, char[][] itemsData, Debug debug) {
     /*
      * YOU NEED TO REWRITE THE IMPLEMENTATION OF THIS METHOD TO MAKE THE BOT SMARTER
      */
@@ -152,9 +182,7 @@ public class SokoBot {
      * sequence
      * that just moves left and right repeatedly.
      */
-    search(width, height, mapData, itemsData);
-
-    return "";
+    return search(width, height, mapData, itemsData, debug);
   }
 
 }
