@@ -23,4 +23,61 @@ public class DeadlockFinder{
     public HashSet<Long> getDeadlockedStates() {
         return deadlockedStates;
     }
+
+    private boolean isInCorner(int boxPos) {
+        int x = boxPos % width;
+        int y = boxPos / width;
+        
+        boolean hasWallLeft = (x > 0 && flatMap[boxPos - 1] == 1);
+        boolean hasWallRight = (x < width - 1 && flatMap[boxPos + 1] == 1);
+        boolean hasWallUp = (y > 0 && flatMap[boxPos - width] == 1);
+        boolean hasWallDown = (y < height - 1 && flatMap[boxPos + width] == 1);
+
+        return (hasWallLeft && hasWallUp) || 
+               (hasWallLeft && hasWallDown) || 
+               (hasWallRight && hasWallUp) || 
+               (hasWallRight && hasWallDown);
+    }
+    
+
+    private boolean isAgainstWall(int boxPos) {
+        int x = boxPos % width;
+        int y = boxPos / width;
+        boolean againstWall = false;
+        
+
+        if (x == 0 || x == width - 1 || y == 0 || y == height - 1) {
+            againstWall = true;
+        } else {
+
+            boolean hasWallLeft = (x > 0 && flatMap[boxPos - 1] == 1);
+            boolean hasWallRight = (x < width - 1 && flatMap[boxPos + 1] == 1);
+            boolean hasWallUp = (y > 0 && flatMap[boxPos - width] == 1);
+            boolean hasWallDown = (y < height - 1 && flatMap[boxPos + width] == 1);
+            
+            if (hasWallLeft && hasWallRight) {
+                againstWall = true;
+            }
+            if (hasWallUp && hasWallDown) {
+                againstWall = true;
+            }
+        }
+        
+        return againstWall;
+    }
+
+    public boolean hasSimpleDeadlock(State state) {
+        boolean hasDeadLock = false;
+        int[] boxPositions = state.getBoxPositions();
+        int i = 0;
+        
+        while (i < boxPositions.length && !hasDeadLock) {
+            int boxPos = boxPositions[i];
+            if (isInCorner(boxPos) || isAgainstWall(boxPos)) {
+                hasDeadLock = true;
+            }
+            i++;
+        }
+        return hasDeadLock;
+    }
 }
