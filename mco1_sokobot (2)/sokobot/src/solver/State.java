@@ -4,7 +4,7 @@ public class State{
     private final int[] boxPositions; 
 	private final int playerPosition; //for controls. Up: -width, Down: +width, Left: -1, Right: +1
     private final State parent;
-    private final int g; // cost so far (number of pushes or moves)
+    private final int g; // cost so far down the tree
     private final int h; // heuristic (distance estimate)
     private final int f; // f = g + h
     private final char prevDirection;
