@@ -8,6 +8,7 @@ public class SokoBot {
     public static int width, height; //dimensions of the map
     private int[] flatMap; // 1 = wall, 0 = free space
     private Zobrist zobristHash;
+    private DeadlockFinder deadlockFinder;
 
     /*This function initializes the static maps in flatMap (map used in determining whether a tile is walkable or not) 
     and the goalTiles, which gets the integer value of each goal tile)*/
