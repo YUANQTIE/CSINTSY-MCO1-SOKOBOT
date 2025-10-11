@@ -80,4 +80,57 @@ public class DeadlockFinder{
         }
         return hasDeadLock;
     }
+
+    public boolean hasFreezeDeadlock(State state){
+        boolean hasFreezeDeadlock = false;
+        int[] boxPositions = state.getBoxPositions();
+        int i = 0;
+        int j = 0;
+
+        while(i < boxPositions.length && !hasFreezeDeadlock){
+            int boxPos = boxPositions[i];
+
+            if(isAgainstWall(boxPos)){
+                int x = boxPos % width;
+                int y = boxPos / width;
+
+                boolean leftBox = false;
+                boolean rightBox = false;
+                boolean upBox = false;
+                boolean downBox = false;
+
+             while(j < boxPositions.length){
+                 int otherBox = boxPositions[j];
+
+                 if(otherBox == boxPos - 1){
+                     leftBox = true
+                 }
+
+                 if(otherBox == boxPos + 1){
+                     rightBox = true;
+                 }
+
+                 if(otherBox == boxPos - width){
+                     upBox = true;
+                 }
+
+                 if(otherBox == boxPos + width){
+                     downBox = true;
+                 }
+
+                 j++;
+                 
+             }    
+
+                if((leftBox && rightBox) || (upBox && downBox)){
+                    hasFreezeDeadlock = true;
+                }
+                
+            }
+
+                i++;
+        } 
+
+            return hasFreezeDeadlock;
+    }
 }
