@@ -19,4 +19,8 @@ public class DeadlockFinder{
         this.zobristHash = zobristHash;
         this.deadlockedStates = new HashSet<>();
     }
+
+    public HashSet<Long> getDeadlockedStates() {
+        return deadlockedStates;
+    }
 }
