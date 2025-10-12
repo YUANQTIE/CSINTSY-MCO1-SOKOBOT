@@ -133,4 +133,24 @@ public class DeadlockFinder{
 
             return hasFreezeDeadlock;
     }
+
+    public boolean hasDeadlock(State state) {
+        boolean hasAnyDeadlock = hasSimpleDeadlock(state) || hasFreezeDeadlock(state);
+        return hasAnyDeadlock;
+    }
+    
+ 
+    public void addDeadlockedState(State state) {
+        long hash = Zobrist.hash(state);
+        deadlockedStates.add(hash);
+
+        zobristHash.getVisitedList().add(hash);
+    }
+    
+   
+    public boolean isDeadlocked(State state) {
+        long hash = Zobrist.hash(state);
+        boolean isDeadlocked = deadlockedStates.contains(hash) || zobristHash.getVisitedList().contains(hash);
+        return isDeadlocked;
+    }
 }
