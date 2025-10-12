@@ -158,7 +158,9 @@ public class SokoBot {
         //TO IMPLEMENT: FREEZE DEADLOCK
         
         State start = getInitialState(itemsData); //initializes the parent state
-       
+
+        deadlockFinder = new DeadlockFinder(flatMap, width, height, zobristHash);
+        
         openList.add(start);
         long startHash = Zobrist.hash(start); 
         zobristHash.getVisitedList().add(startHash);
