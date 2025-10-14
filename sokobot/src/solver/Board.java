@@ -178,4 +178,8 @@ public class Board {
         }
         return false;
     }
+
+    public int[] getGoalPosition() {
+        return this.goalPosition;
+    }
 }

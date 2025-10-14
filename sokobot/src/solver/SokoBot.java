@@ -106,15 +106,71 @@ public class SokoBot {
         return false;
     }
 
+    public int manhattanDistance(int box, int goal, int width){
+        //compute x-component and y-component of the manhattan distance
+        int xComponent = Math.abs((box % width) - (goal % width));
+        int yComponenent = Math.abs((box / width) - (goal / width)); //we only need to add kasi the number of tiles is exactly the distance
+
+        return xComponent + yComponenent;
+    }
+
+    public int getHeuristic(Board board, int[] boxPositions, int width) {
+        List<int[]> list = new ArrayList<>(); //each int[] contains {distance, box, goal}
+        int h = 0;
+
+        //Computes the distance of every box to every goal
+        for(int i=0; i< board.getNumOfBoxes(); i++) {
+            for(int j=0; j<board.getNumOfBoxes(); j++) {
+                int dist = manhattanDistance(boxPositions[i], board.getGoalPosition()[j], width);
+                list.add(new int[]{dist, i, j});
+            }
+        }
+
+        //Sort by ascending distance
+        list.sort(Comparator.comparingInt(dist -> dist[0]));
+
+        ArrayList<Integer> matchedBoxes = new ArrayList<>();
+        ArrayList<Integer> matchedGoals = new ArrayList<>();
+
+        for(int[] d: list) {
+            int dist = d[0];
+            int box = d[1];
+            int goal = d[2];
+            if(!matchedBoxes.contains(box) && !matchedGoals.contains(goal)) {
+                matchedBoxes.add(box);
+                matchedGoals.add(goal);
+                h += dist;
+            }
+        }
+
+        //For unmatched boxes, assign them to nearest goal
+        for(int i=0; i<board.getNumOfBoxes(); i++) {
+            if(!matchedBoxes.contains(i)) {
+                int min = Integer.MAX_VALUE;
+                for(int j=0; i<board.getNumOfBoxes(); j++) {
+                    int goal = board.getGoalPosition()[j];
+                    int d = manhattanDistance(i, goal, width);
+                    if(d < min) {
+                        min = d;
+                    }
+                }
+                h += min;
+            }
+        }
+
+        return h;
+    }
+
     public String solveSokobanPuzzle(int width, int height, char[][] mapData, char[][] itemsData) {
         Board board = new Board(width, height, mapData, itemsData);
         board.setBoard();
         Set<Long> visited = new HashSet<>();
         Zobrist zobrist = new Zobrist(width, height);
-        Queue<Node> queue = new LinkedList<>();
+        Queue<Node> queue = new PriorityQueue<>(Comparator.comparingInt(n -> n.tCost));
         long startHash = zobrist.computeHash(board.getPlayerPosition(), board.getBoxPosition());
         State start = new State(board.getBoxPosition(), board.getPlayerPosition(), startHash);
-        Node node = new Node(start, "");
+        int h = getHeuristic(board, start.boxPositions, width);
+        Node node = new Node(start, "", 0, h);
         //Add initial state to visited queue
         visited.add(startHash);
         queue.add(node);
@@ -133,8 +189,10 @@ public class SokoBot {
                 State next = curr.state.apply(move);
                 if (visited.contains(next.hash)) continue;
                 if (isSimpleDeadlocked(board, width, next.boxPositions)) continue;
+                int g = curr.gCost + 1;
+                h = getHeuristic(board, next.boxPositions, width);
                 visited.add(next.hash);
-                node = new Node(next, curr.path + move.getPath());
+                node = new Node(next, curr.path + move.getPath(), g, h);
                 queue.add(node);
             }
 
