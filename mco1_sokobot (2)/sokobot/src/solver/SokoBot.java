@@ -185,6 +185,12 @@ public class SokoBot {
                         continue;
                     } 
 
+                    // Check for deadlocks before processing the state
+                    if (deadlockFinder.hasDeadlock(next)) {
+                        deadlockFinder.addDeadlockedState(next);
+                        continue; // Skip deadlocked states
+                    }
+
                     int g = current.getG() + 1; //1 cost per depth
                     int nh = heuristic(next);
                     int f = g + nh;
