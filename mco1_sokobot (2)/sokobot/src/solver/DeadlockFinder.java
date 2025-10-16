@@ -85,7 +85,6 @@ public class DeadlockFinder{
         boolean hasFreezeDeadlock = false;
         int[] boxPositions = state.getBoxPositions();
         int i = 0;
-        int j = 0;
 
         while(i < boxPositions.length && !hasFreezeDeadlock){
             int boxPos = boxPositions[i];
@@ -99,11 +98,12 @@ public class DeadlockFinder{
                 boolean upBox = false;
                 boolean downBox = false;
 
-             while(j < boxPositions.length){
+                int j = 0;
+                while(j < boxPositions.length){
                  int otherBox = boxPositions[j];
 
                  if(otherBox == boxPos - 1){
-                     leftBox = true
+                     leftBox = true;
                  }
 
                  if(otherBox == boxPos + 1){
@@ -119,8 +119,7 @@ public class DeadlockFinder{
                  }
 
                  j++;
-                 
-             }    
+                }
 
                 if((leftBox && rightBox) || (upBox && downBox)){
                     hasFreezeDeadlock = true;
