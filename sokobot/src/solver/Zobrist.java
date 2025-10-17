@@ -17,6 +17,15 @@ public class Zobrist {
     }
 
     public static long computeHash(int playerPosition, int[] boxPosition) {
+        long hash = 0L;
+        hash ^= playerHash[playerPosition];
+        for(int i=0; i<boxPosition.length; i++) {
+            hash ^= boxHash[boxPosition[i]];
+        }
+        return hash;
+    }
+
+    public static long computeHashForLargeMaps(int playerPosition, int[] boxPosition) {
         long hash = playerHash[playerPosition];
         hash ^= playerHash[playerPosition];
         for(int i=0; i<boxPosition.length; i++) {
@@ -24,5 +33,7 @@ public class Zobrist {
         }
         return hash;
     }
+
+
 
 }

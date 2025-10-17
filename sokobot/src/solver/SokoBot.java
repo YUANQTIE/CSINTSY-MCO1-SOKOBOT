@@ -77,7 +77,6 @@ public class SokoBot {
         return moves;
     }
 
-
     public boolean isComplete(Board board, State state) {
         for (int box : state.boxPositions) {
             if (!board.isInGoal(box)) {
@@ -165,6 +164,7 @@ public class SokoBot {
         Board board = new Board(width, height, mapData, itemsData);
         board.setBoard();
         Set<Long> visited = new HashSet<>();
+        Set<Long> deadlocked = new HashSet<>();
         Zobrist zobrist = new Zobrist(width, height);
         Queue<Node> queue = new PriorityQueue<>(Comparator.comparingInt(n -> n.tCost));
         long startHash = zobrist.computeHash(board.getPlayerPosition(), board.getBoxPosition());
@@ -174,11 +174,6 @@ public class SokoBot {
         //Add initial state to visited queue
         visited.add(startHash);
         queue.add(node);
-        System.out.print("Box positions: ");
-        for(int i=0; i<board.getNumOfBoxes(); i++) {
-            System.out.print(board.getBoxPosition()[i] + " ");
-        }
-        System.out.println();
 
         while (!queue.isEmpty()) {
             Node curr = queue.poll();
@@ -186,9 +181,12 @@ public class SokoBot {
                 return curr.getPath();
             }
             for (Move move : getAllPossibleMoves(width, board, curr.state.playerPosition, curr.state.boxPositions)) {
-                State next = curr.state.apply(move);
-                if (visited.contains(next.hash)) continue;
-                if (isSimpleDeadlocked(board, width, next.boxPositions)) continue;
+                State next = curr.state.apply(move, board.getNumOfBoxes());
+                if (visited.contains(next.hash) || deadlocked.contains(next.hash)) continue;
+                if (isSimpleDeadlocked(board, width, next.boxPositions)) {
+                    deadlocked.add(next.hash);
+                    continue;
+                }
                 int g = curr.gCost + 1;
                 h = getHeuristic(board, next.boxPositions, width);
                 visited.add(next.hash);
