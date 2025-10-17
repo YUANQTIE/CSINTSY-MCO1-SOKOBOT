@@ -32,14 +32,13 @@ public class State {
     public State apply(Move move, int numOfBoxes) {
         int newPlayerPosition = move.getNewPlayerPosition();
         int[] newBoxPosition = this.boxPositions.clone();
-        long newHash = this.hash;
+        long newHash;
 
-        if(move.isPushedBox()) {
+        if(move.isPushedBox())
            newBoxPosition = this.updateBoxPosition(newBoxPosition, move.getOldBoxPosition(), move.getNewBoxPosition());
-        }
-        if(numOfBoxes > 5) {
+
+        if(numOfBoxes > 5)
             newHash = Zobrist.computeHashForLargeMaps(newPlayerPosition, newBoxPosition);
-        }
         else
             newHash = Zobrist.computeHash(newPlayerPosition, newBoxPosition);
 
