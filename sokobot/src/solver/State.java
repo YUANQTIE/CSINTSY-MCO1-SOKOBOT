@@ -1,10 +1,10 @@
 package solver;
 public class State {
-    int[] boxPositions;
-    int playerPosition;
-    long hash;
-    State linkToState;
-    int newBoxPosition;
+    private int[] boxPositions;
+    private int playerPosition;
+    private long hash;
+    private State linkToState;
+    private int newBoxPosition;
 
     public State(int[] boxPositions, int playerPosition, long hash) {
         this.boxPositions = boxPositions;
@@ -30,11 +30,11 @@ public class State {
     }
 
     public State apply(Move move, int numOfBoxes) {
-        int newPlayerPosition = move.newPlayerPosition;
+        int newPlayerPosition = move.getNewPlayerPosition();
         int[] newBoxPosition = this.boxPositions.clone();
         long newHash = this.hash;
 
-        if(move.pushedBox) {
+        if(move.isPushedBox()) {
            newBoxPosition = this.updateBoxPosition(newBoxPosition, move.getOldBoxPosition(), move.getNewBoxPosition());
         }
         if(numOfBoxes > 5) {
@@ -46,5 +46,43 @@ public class State {
         return new State(newBoxPosition, newPlayerPosition, newHash);
     }
 
+    public int getNewBoxPosition() {
+        return newBoxPosition;
+    }
 
+    public void setNewBoxPosition(int newBoxPosition) {
+        this.newBoxPosition = newBoxPosition;
+    }
+
+    public State getLinkToState() {
+        return linkToState;
+    }
+
+    public void setLinkToState(State linkToState) {
+        this.linkToState = linkToState;
+    }
+
+    public long getHash() {
+        return hash;
+    }
+
+    public void setHash(long hash) {
+        this.hash = hash;
+    }
+
+    public int getPlayerPosition() {
+        return playerPosition;
+    }
+
+    public void setPlayerPosition(int playerPosition) {
+        this.playerPosition = playerPosition;
+    }
+
+    public int[] getBoxPositions() {
+        return boxPositions;
+    }
+
+    public void setBoxPositions(int[] boxPositions) {
+        this.boxPositions = boxPositions;
+    }
 }

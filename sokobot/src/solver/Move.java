@@ -1,11 +1,11 @@
 package solver;
 public class Move {
-    int oldPlayerPosition;
-    int newPlayerPosition;
-    int oldBoxPosition;
-    int newBoxPosition;
-    boolean pushedBox;
-    String path;
+    private int oldPlayerPosition;
+    private int newPlayerPosition;
+    private int oldBoxPosition;
+    private int newBoxPosition;
+    private boolean pushedBox;
+    private String path;
 
     public Move(int oldPlayerPosition, int newPlayerPosition, String path) {
         this.oldPlayerPosition = oldPlayerPosition;
@@ -41,6 +41,14 @@ public class Move {
 
     public String getPath() {
         return this.path;
+    }
+
+    public boolean isPushedBox() {
+        return pushedBox;
+    }
+
+    public void setNewPlayerPosition(int newPlayerPosition) {
+        this.newPlayerPosition = newPlayerPosition;
     }
 
 }

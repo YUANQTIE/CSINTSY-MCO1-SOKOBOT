@@ -9,14 +9,15 @@ Movement:
 + 1: right
  */
 public class SokoBot {
-    //BFS to get all player reachable positions
+    // BFS to get all player reachable positions
     public ArrayList<Move> getAllPossibleMoves(int width, Board board, int playerPosition, int[] boxPositions) {
         ArrayList<Move> moves = new ArrayList<>();
         int boardSize = board.getBoard().length;
         boolean[] visited = new boolean[boardSize];
         int[] directions = {-width, width, -1, 1};
         char[] directionChar = {'u', 'd', 'l', 'r'};
-        //<tileNumber, pathToTile>
+
+        // <tileNumber, pathToTile>
         Map<Integer, String> paths = new HashMap<>();
         Queue<Integer> queue = new LinkedList<>();
         queue.add(playerPosition);
@@ -28,10 +29,10 @@ public class SokoBot {
             String path = paths.get(position);
             for(int i=0; i<4; i++) {
                 int next = position + directions[i];
-                //Out of bounds
+                // Out of bounds
                 if(next < 0 || next >= boardSize) continue;
 
-                //There is a wall or box blocking
+                // There is a wall or box blocking
                 if(board.checkWall(next) || board.checkBox(next, boxPositions)) continue;
 
                 if(!visited[next]) {
@@ -43,12 +44,12 @@ public class SokoBot {
 
         }
         for(int i=0; i<boardSize; i++) {
-            //If the point or tile is not in the visited array, it means that it is not reachable
+            // If the point or tile is not in the visited array, it means that it is not reachable
             if(!visited[i]) continue;
 
-            //Path from player position to next to box
+            // Path from player position to next to box
             String path = paths.get(i);
-            //Checks if the player is next to a box
+            // Checks if the player is next to a box
             boolean boxIsUp = board.isPlayerNextToBox("Up", width, boxPositions, i);
             boolean boxIsDown = board.isPlayerNextToBox("Down", width, boxPositions, i);
             boolean boxIsLeft = board.isPlayerNextToBox("Left", width, boxPositions, i);
@@ -78,7 +79,7 @@ public class SokoBot {
     }
 
     public boolean isComplete(Board board, State state) {
-        for (int box : state.boxPositions) {
+        for (int box : state.getBoxPositions()) {
             if (!board.isInGoal(box)) {
                 return false; // at least one box not on goal
             }
@@ -163,41 +164,43 @@ public class SokoBot {
     public String solveSokobanPuzzle(int width, int height, char[][] mapData, char[][] itemsData) {
         Board board = new Board(width, height, mapData, itemsData);
         board.setBoard();
+
         Set<Long> visited = new HashSet<>();
         Set<Long> deadlocked = new HashSet<>();
-        Zobrist zobrist = new Zobrist(width, height);
-        Queue<Node> queue = new PriorityQueue<>(Comparator.comparingInt(n -> n.tCost));
-        long startHash = zobrist.computeHash(board.getPlayerPosition(), board.getBoxPosition());
+        Zobrist.initialize(width, height);
+        Queue<Node> queue = new PriorityQueue<>(Comparator.comparingInt(Node::getTCost));
+        long startHash = Zobrist.computeHash(board.getPlayerPosition(), board.getBoxPosition());
         State start = new State(board.getBoxPosition(), board.getPlayerPosition(), startHash);
-        int h = getHeuristic(board, start.boxPositions, width);
+        int h = getHeuristic(board, start.getBoxPositions(), width);
         Node node = new Node(start, "", 0, h);
+
         //Add initial state to visited queue
         visited.add(startHash);
         queue.add(node);
 
         while (!queue.isEmpty()) {
             Node curr = queue.poll();
-            if (isComplete(board, curr.state)) {
+            if (isComplete(board, curr.getState())) {
                 return curr.getPath();
             }
-            for (Move move : getAllPossibleMoves(width, board, curr.state.playerPosition, curr.state.boxPositions)) {
-                State next = curr.state.apply(move, board.getNumOfBoxes());
-                if (visited.contains(next.hash) || deadlocked.contains(next.hash)) continue;
-                if (isSimpleDeadlocked(board, width, next.boxPositions)) {
-                    deadlocked.add(next.hash);
+            for (Move move : getAllPossibleMoves(width, board, curr.getState().getPlayerPosition(), curr.getState().getBoxPositions())) {
+                State next = curr.getState().apply(move, board.getNumOfBoxes());
+                if (visited.contains(next.getHash()) || deadlocked.contains(next.getHash())) continue;
+                if (isSimpleDeadlocked(board, width, next.getBoxPositions())) {
+                    deadlocked.add(next.getHash());
                     continue;
                 }
-                int g = curr.gCost + 1;
-                h = getHeuristic(board, next.boxPositions, width);
-                visited.add(next.hash);
-                node = new Node(next, curr.path + move.getPath(), g, h);
+                int g = curr.getGCost() + 1;
+                h = getHeuristic(board, next.getBoxPositions(), width);
+                visited.add(next.getHash());
+                node = new Node(next, curr.getPath() + move.getPath(), g, h);
                 queue.add(node);
             }
 
         }
         System.out.print("New Box positions: ");
         for(int i=0; i<board.getNumOfBoxes(); i++) {
-            System.out.print(node.state.boxPositions[i] + " ");
+            System.out.print(node.getState().getBoxPositions()[i] + " ");
         }
         System.out.println();
         System.out.println("Path: " + node.getPath());
