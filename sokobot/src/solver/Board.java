@@ -11,7 +11,7 @@ package solver;
 
 public class Board {
     private int[] board;
-    private int width, height;
+    public static int width, height;
     private char[][] mapData;
     private char[][] itemsData;
     private int numOfBoxes;
@@ -79,8 +79,26 @@ public class Board {
         playerPosition = player;
     }
 
+    public boolean isFloor(int row, int col) {
+        if (row < 0 || row >= height || col < 0 || col >= width)
+            return false;
+
+        char c = mapData[row][col];
+        return c == ' ' || c == '.';
+    }
+
+
+
     public int[] getBoard() {
         return this.board;
+    }
+    
+    public static int getWidth(){
+        return width;
+    }
+
+    public static int getHeight(){
+        return height;
     }
 
     public int getNumOfBoxes() {
@@ -182,4 +200,12 @@ public class Board {
     public int[] getGoalPosition() {
         return this.goalPosition;
     }
+
+    public boolean isFloor(int tileIndex) {
+        if (tileIndex < 0 || tileIndex >= board.length)
+            return false;
+
+        return board[tileIndex] != 4;
+    }
+
 }

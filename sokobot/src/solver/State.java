@@ -6,6 +6,15 @@ public class State {
     private State linkToState;
     private int newBoxPosition;
 
+    public State(int[] boxPosition) {
+        this.boxPositions = boxPosition;
+    }
+
+    public State(int[] boxPositions, int playerPosition) {
+        this.boxPositions = boxPositions;
+        this.playerPosition = playerPosition;
+    }
+
     public State(int[] boxPositions, int playerPosition, long hash) {
         this.boxPositions = boxPositions;
         this.playerPosition = playerPosition;

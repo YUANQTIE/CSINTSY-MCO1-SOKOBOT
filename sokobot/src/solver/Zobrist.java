@@ -17,6 +17,13 @@ public class Zobrist {
         }
     }
 
+    public static long computeSingleBoxHash(int boxPosition) {
+        long hash = 0L;
+        hash ^= boxHash[boxPosition];
+
+        return hash;
+    }
+
     public static long computeHash(int playerPosition, int[] boxPosition) {
         long hash = 0L;
         hash ^= playerHash[playerPosition];

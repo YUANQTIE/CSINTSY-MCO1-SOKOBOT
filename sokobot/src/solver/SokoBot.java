@@ -9,7 +9,189 @@ Movement:
 + 1: right
  */
 public class SokoBot {
+
     // BFS to get all player reachable positions
+
+    private boolean[] getUnoccupiedTiles(Board board) {
+        int width = board.getWidth();
+        int height = board.getHeight();
+        int boardSize = width * height;
+        boolean[] reachable = new boolean[boardSize];
+        int[] directions = {-width, width, -1, 1};
+
+        for (int goal : board.getGoalPosition()){
+            if (goal == 0){
+                continue;
+            }
+            System.out.print(goal + " ");
+        }
+        System.out.println("\n");
+
+        for (int goal : board.getGoalPosition()) {
+            if (goal == 0){
+                continue;
+            }
+            Queue<State> queue = new LinkedList<>();
+            boolean[] visited = new boolean[boardSize];
+
+            System.out.println("CURRENT GOAL: " + goal);
+            int[] initialBox = {goal};
+            State start = new State(initialBox);
+            visited[goal] = true;
+
+            for (int i = 0; i < boardSize; i++) {
+
+                if (initialBox[0] == i){
+                    if (board.getBoard()[i] == 3){
+                        System.out.print("*");
+                    }
+                    else{
+                        System.out.print("$");
+                    }
+                    continue;
+                    
+                }
+                if (board.getBoard()[i] == 4){
+                    System.out.print("#");
+                }
+
+                if (board.getBoard()[i] == 3){
+                    System.out.print(".");
+                }
+
+                if (board.getBoard()[i] == 0){
+                    System.out.print(" ");
+                }
+
+                // Print a newline after finishing each row
+                if ((i + 1) % board.getWidth() == 0) {
+                    System.out.println();
+                }
+            }
+
+            if (start.getBoxPositions()[0] - 1 >= 0 && start.getBoxPositions()[0] - 1 < boardSize){
+                if (!board.checkWall(start.getBoxPositions()[0] - 1)){
+                    State left = new State(start.getBoxPositions(), start.getBoxPositions()[0] - 1);
+                    queue.add(left);
+                }
+            }
+            if (start.getBoxPositions()[0] + 1 >= 0 && start.getBoxPositions()[0] + 1 < boardSize){
+                if (!board.checkWall(start.getBoxPositions()[0] + 1)){
+                    State right = new State(start.getBoxPositions(), start.getBoxPositions()[0] + 1);
+                    queue.add(right);
+                }
+            }
+            if (start.getBoxPositions()[0] - width >= 0 && start.getBoxPositions()[0] - width < boardSize){
+                if (!board.checkWall(start.getBoxPositions()[0] - width)){
+                    State up = new State(start.getBoxPositions(), start.getBoxPositions()[0] - width);
+                    queue.add(up);
+                }
+            }
+            if (start.getBoxPositions()[0] + width >= 0 && start.getBoxPositions()[0] + width < boardSize){
+                if (!board.checkWall(start.getBoxPositions()[0] + width)){
+                    State down = new State(start.getBoxPositions(), start.getBoxPositions()[0] + width);
+                    queue.add(down);
+                }
+            }
+
+            while (!queue.isEmpty()) {
+                State current = queue.poll();
+                int boxPos = current.getBoxPositions()[0];
+                int playerPos = current.getPlayerPosition();
+                reachable[boxPos] = true;
+
+                for (int dir : directions) {
+                    int playerBehind = playerPos - dir; 
+                    int boxPulledTo = boxPos - dir;  
+                    if (playerBehind < 0 || playerBehind >= boardSize) continue;
+                    if (boxPulledTo < 0 || boxPulledTo >= boardSize) continue;
+                    if ((dir == -1 || dir == 1) && boxPos / width != boxPulledTo / width) continue;
+                    if (board.checkWall(playerBehind)) continue;
+                    if (visited[boxPulledTo]){
+                        System.out.println("visited!");
+                        continue;
+                    } 
+
+                    // --- Mark visited and enqueue ---
+                    visited[boxPulledTo] = true;
+                    int[] newBox = {boxPulledTo};
+                    queue.add(new State(newBox, playerBehind, 0L));
+
+                    System.out.println(dir);
+                    for (int i = 0; i < boardSize; i++) {
+
+                        if (i == playerBehind){
+                            if (board.getBoard()[i] == 3){
+                                System.out.print("+");
+                            }
+                            else{
+                                System.out.print("@");
+                            }
+                            continue;
+                        }
+
+                        if (boxPulledTo == i){
+                            if (board.getBoard()[i] == 3){
+                                System.out.print("*");
+                            }
+                            else{
+                                System.out.print("$");
+                            }
+                            continue;
+                            
+                        }
+                        if (board.getBoard()[i] == 4){
+                            System.out.print("#");
+                        }
+
+                        if (board.getBoard()[i] == 3){
+                            System.out.print(".");
+                        }
+
+                        if (board.getBoard()[i] == 0){
+                            System.out.print(" ");
+                        }
+
+                        // Print a newline after finishing each row
+                        if ((i + 1) % board.getWidth() == 0) {
+                            System.out.println();
+                        }
+                    }
+                }
+            }
+        }
+
+        return reachable;
+    }
+
+
+
+    private Set<Long> getSimpleDeadlockedTiles(Board board){
+        Set<Long> unvisited = new HashSet<>();
+        int boardSize = board.getHeight() * board.getWidth();
+        boolean[] tileOccupied = getUnoccupiedTiles(board);
+
+        for (int i = 0; i < boardSize; i++){
+            if (!tileOccupied[i]){
+                System.out.println("Deadlocked tile: " +  i);
+                unvisited.add(Zobrist.computeSingleBoxHash(i));
+            }
+        }
+
+        return unvisited;
+    }
+
+
+    //checks if one box in a current state contains the same hash as a deadlocked spot
+    private boolean isolateBox(Board board, State state, Set<Long> deadlocked){
+        for (int box : state.getBoxPositions()) {
+            if (deadlocked.contains(Zobrist.computeSingleBoxHash(box))) {
+                return true; //a box is in a deadlocked spot
+            }
+        }
+        return false; 
+    }
+    
     public ArrayList<Move> getAllPossibleMoves(int width, Board board, int playerPosition, int[] boxPositions) {
         ArrayList<Move> moves = new ArrayList<>();
         int boardSize = board.getBoard().length;
@@ -87,25 +269,6 @@ public class SokoBot {
         return true; // all boxes are on goals
     }
 
-    public boolean isSimpleDeadlocked(Board board, int width, int[] boxPositions) {
-        for (int box : boxPositions) {
-            // Skip if the box is on a goal
-            if (board.isInGoal(box)) continue;
-
-            // Check if box is in a corner (two adjacent walls)
-            boolean up = board.checkWall(box - width);
-            boolean down = board.checkWall(box + width);
-            boolean left = board.checkWall(box - 1);
-            boolean right = board.checkWall(box + 1);
-
-            // If it's stuck in a corner and not on goal
-            if ((up && left) || (up && right) || (down && left) || (down && right)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public int manhattanDistance(int box, int goal, int width){
         //compute x-component and y-component of the manhattan distance
         int xComponent = Math.abs((box % width) - (goal % width));
@@ -164,10 +327,9 @@ public class SokoBot {
     public String solveSokobanPuzzle(int width, int height, char[][] mapData, char[][] itemsData) {
         Board board = new Board(width, height, mapData, itemsData);
         board.setBoard();
-
-        Set<Long> visited = new HashSet<>();
-        Set<Long> deadlocked = new HashSet<>();
         Zobrist.initialize(width, height);
+        Set<Long> visited = new HashSet<>();
+        Set<Long> deadlocked = getSimpleDeadlockedTiles(board);
         Queue<Node> queue = new PriorityQueue<>(Comparator.comparingInt(Node::getTCost));
         long startHash = Zobrist.computeHash(board.getPlayerPosition(), board.getBoxPosition());
         State start = new State(board.getBoxPosition(), board.getPlayerPosition(), startHash);
@@ -185,11 +347,8 @@ public class SokoBot {
             }
             for (Move move : getAllPossibleMoves(width, board, curr.getState().getPlayerPosition(), curr.getState().getBoxPositions())) {
                 State next = curr.getState().apply(move, board.getNumOfBoxes());
-                if (visited.contains(next.getHash()) || deadlocked.contains(next.getHash())) continue;
-                if (isSimpleDeadlocked(board, width, next.getBoxPositions())) {
-                    deadlocked.add(next.getHash());
-                    continue;
-                }
+                if (visited.contains(next.getHash()) || isolateBox(board, next, deadlocked)) continue;
+
                 int g = curr.getGCost() + 1;
                 h = getHeuristic(board, next.getBoxPositions(), width);
                 visited.add(next.getHash());
