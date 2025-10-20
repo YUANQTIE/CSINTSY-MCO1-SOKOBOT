@@ -46,7 +46,7 @@ public class State {
         if(move.isPushedBox())
            newBoxPosition = this.updateBoxPosition(newBoxPosition, move.getOldBoxPosition(), move.getNewBoxPosition());
 
-        if(numOfBoxes > 5)
+        if(Board.width * Board.height > 156)
             newHash = Zobrist.computeHashForLargeMaps(newPlayerPosition, newBoxPosition);
         else
             newHash = Zobrist.computeHash(newPlayerPosition, newBoxPosition);
