@@ -84,7 +84,7 @@ public class SokoBot {
         return false; 
     }
 
-    public boolean isSimpleDeadlocked(Board board, int width, int[] boxPositions) {
+    /*public boolean isSimpleDeadlocked(Board board, int width, int[] boxPositions) {
         for (int box : boxPositions) {
             // Skip if the box is on a goal
             if (board.isInGoal(box)) continue;
@@ -101,7 +101,7 @@ public class SokoBot {
             }
         }
         return false;
-    }
+    }*/
     
     public ArrayList<Move> getAllPossibleMoves(int width, Board board, int playerPosition, int[] boxPositions) {
         ArrayList<Move> moves = new ArrayList<>();
