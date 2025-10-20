@@ -6,11 +6,10 @@ public class Zobrist {
     private static long[] boxHash;
 
     public static void initialize(int rows, int cols) {
-        Random rand = new Random();
+        Random rand = new Random(0); 
         playerHash = new long[rows*cols];
         boxHash = new long[rows*cols];
-
-        Random rand = new Random(0); 
+        
         //PRNG (Pseudo Random Number Generator)
         for(int i=0; i<rows*cols; i++) {
             playerHash[i] = rand.nextLong();
