@@ -180,6 +180,87 @@ public class SokoBot {
         return true; // all boxes are on goals
     }
 
+    public boolean isFreezeDeadlock(Board board, int width, int[] boxPositions) {
+        // Check if any box is frozen (cannot be pushed in any direction)
+        for (int i = 0; i < boxPositions.length; i++) {
+            int box = boxPositions[i];
+            if (board.isInGoal(box)) continue; // Skip boxes on goals
+            
+            // Check if this box is frozen (blocked on both axes)
+            if (isBoxFrozen(board, width, box, boxPositions, i, new HashSet<>())) {
+                return true; // Found a frozen box not on goal = freeze deadlock
+            }
+        }
+        return false; // No frozen boxes found
+    }
+
+    /**
+     * Check if a box is frozen (blocked on both vertical and horizontal axes)
+     */
+    private boolean isBoxFrozen(Board board, int width, int box, int[] boxPositions, int currentBoxIndex, Set<Integer> checkedBoxes) {
+        // Avoid circular checks - if we've already checked this box, treat it as blocked
+        if (checkedBoxes.contains(currentBoxIndex)) {
+            return true; // Already checked this box, treat as blocked
+        }
+        checkedBoxes.add(currentBoxIndex);
+
+        // Check if box is blocked vertically
+        boolean blockedVertically = isBoxBlockedOnAxis(board, width, box, boxPositions, currentBoxIndex, true, checkedBoxes);
+        
+        // Check if box is blocked horizontally  
+        boolean blockedHorizontally = isBoxBlockedOnAxis(board, width, box, boxPositions, currentBoxIndex, false, checkedBoxes);
+
+        // Box is frozen if blocked on both axes
+        return blockedVertically && blockedHorizontally;
+    }
+
+    /**
+     * Check if a box is blocked on a specific axis (vertical or horizontal)
+     */
+    private boolean isBoxBlockedOnAxis(Board board, int width, int box, int[] boxPositions, int currentBoxIndex, boolean isVertical, Set<Integer> checkedBoxes) {
+        int boardSize = board.getBoard().length;
+        
+        if (isVertical) {
+            // Check vertical axis (up and down)
+            boolean upBlocked = isPositionBlocked(board, width, box - width, boxPositions, currentBoxIndex, checkedBoxes);
+            boolean downBlocked = isPositionBlocked(board, width, box + width, boxPositions, currentBoxIndex, checkedBoxes);
+            return upBlocked && downBlocked;
+        } else {
+            // Check horizontal axis (left and right)
+            boolean leftBlocked = isPositionBlocked(board, width, box - 1, boxPositions, currentBoxIndex, checkedBoxes);
+            boolean rightBlocked = isPositionBlocked(board, width, box + 1, boxPositions, currentBoxIndex, checkedBoxes);
+            return leftBlocked && rightBlocked;
+        }
+    }
+
+    /**
+     * Check if a position is blocked (wall, out of bounds, or blocked box)
+     */
+    private boolean isPositionBlocked(Board board, int width, int position, int[] boxPositions, int currentBoxIndex, Set<Integer> checkedBoxes) {
+        int boardSize = board.getBoard().length;
+        
+        // Check 1: Out of bounds = blocked
+        if (position < 0 || position >= boardSize) {
+            return true;
+        }
+        
+        // Check 2: Wall = blocked
+        if (board.checkWall(position)) {
+            return true;
+        }
+
+        
+        // Check 4: Box at position - check if that box is blocked
+        for (int i = 0; i < boxPositions.length; i++) {
+            if (i != currentBoxIndex && boxPositions[i] == position) {
+                // Found a box at this position - check if it's blocked
+                return isBoxFrozen(board, width, position, boxPositions, i, checkedBoxes);
+            }
+        }
+        
+        return false; // Position is not blocked
+    }
+
     public int manhattanDistance(int box, int goal, int width){
         //compute x-component and y-component of the manhattan distance
         int xComponent = Math.abs((box % width) - (goal % width));
@@ -242,7 +323,7 @@ public class SokoBot {
         Zobrist.initialize(width, height);
 
         Set<Long> visited = new HashSet<>();
-        Set<Long> otherSimpleDeadlocked = getSimpleDeadlockedTiles(board);
+        Set<Long> deadlocked = getSimpleDeadlockedTiles(board);
         
         Queue<Node> queue = new PriorityQueue<>(Comparator.comparingInt(Node::getTCost));
         long startHash = Zobrist.computeHash(board.getPlayerPosition(), board.getBoxPosition());
@@ -263,9 +344,15 @@ public class SokoBot {
                 State next = curr.getState().apply(move, board.getNumOfBoxes());
                 if (visited.contains(next.getHash())) continue;
 
-                if (isolateBox(board, next, otherSimpleDeadlocked)){
+                if (isolateBox(board, next, deadlocked)){
                     continue;
                 }
+
+                else if (isFreezeDeadlock(board, width, next.getBoxPositions())) {
+                    deadlocked.add(next.getHash());
+                    continue;
+                }
+
                 int g = curr.getGCost() + 1;
                 h = getHeuristic(board, next.getBoxPositions(), width);
                 visited.add(next.getHash());
