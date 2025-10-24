@@ -7,11 +7,11 @@ public class Zobrist {
 
     public static void initialize(int rows, int cols) {
         Random rand = new Random(0); 
-        playerHash = new long[rows*cols];
-        boxHash = new long[rows*cols];
+        playerHash = new long[rows * cols];
+        boxHash = new long[rows * cols];
         
         //PRNG (Pseudo Random Number Generator)
-        for(int i=0; i<rows*cols; i++) {
+        for (int i = 0; i < rows * cols; i++) {
             playerHash[i] = rand.nextLong();
             boxHash[i] = rand.nextLong();
         }
@@ -20,25 +20,20 @@ public class Zobrist {
     public static long computeSingleBoxHash(int boxPosition) {
         long hash = 0L;
         hash ^= boxHash[boxPosition];
-
         return hash;
     }
 
     public static long computeHash(int playerPosition, int[] boxPosition) {
         long hash = 0L;
         hash ^= playerHash[playerPosition];
-        for (int j : boxPosition) {
-            hash ^= boxHash[j];
-        }
+        for (int j : boxPosition) hash ^= boxHash[j];
         return hash;
     }
 
     public static long computeHashForLargeMaps(int playerPosition, int[] boxPosition) {
         long hash = playerHash[playerPosition];
         hash ^= playerHash[playerPosition];
-        for (int j : boxPosition) {
-            hash ^= boxHash[j];
-        }
+        for (int j : boxPosition) hash ^= boxHash[j];
         return hash;
     }
 }

@@ -2,7 +2,7 @@ package solver;
 public class Node {
     private State state;
     private String path;
-    private int gCost; //Actual cost so far (path length)
+    private int gCost; // Actual cost so far (path length)
     private int hCost; // Heuristic
     private int tCost; // gCost + hCost
 

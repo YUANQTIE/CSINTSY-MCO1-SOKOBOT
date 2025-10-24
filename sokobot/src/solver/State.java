@@ -6,50 +6,30 @@ public class State {
     private State linkToState;
     private int newBoxPosition;
 
-    public State(int[] boxPosition) {
-        this.boxPositions = boxPosition;
-    }
-
-    public State(int[] boxPositions, int playerPosition) {
-        this.boxPositions = boxPositions;
-        this.playerPosition = playerPosition;
-    }
-
     public State(int[] boxPositions, int playerPosition, long hash) {
         this.boxPositions = boxPositions;
         this.playerPosition = playerPosition;
         this.hash = hash;
     }
 
-    public State(int[] boxPositions, int playerPosition, long hash, State previousState, int newBoxPosition) {
-        this.boxPositions = boxPositions;
-        this.playerPosition = playerPosition;
-        this.hash = hash;
-        this.linkToState = previousState;
-        this.newBoxPosition = newBoxPosition;
-    }
-
     public int[] updateBoxPosition(int[] boxPositions, int oldBoxPosition, int newBoxPosition) {
-        for(int i=0; i<boxPositions.length; i++) {
-            if(boxPositions[i] == oldBoxPosition) {
+        for (int i = 0; i < boxPositions.length; i++)
+            if (boxPositions[i] == oldBoxPosition)
                 boxPositions[i] = newBoxPosition;
-            }
-        }
         return boxPositions;
     }
 
-    public State apply(Move move, int numOfBoxes) {
+    public State apply(Move move) {
         int newPlayerPosition = move.getNewPlayerPosition();
         int[] newBoxPosition = this.boxPositions.clone();
         long newHash;
 
-        if(move.isPushedBox())
+        if (move.isPushedBox())
            newBoxPosition = this.updateBoxPosition(newBoxPosition, move.getOldBoxPosition(), move.getNewBoxPosition());
 
-        if(Board.width * Board.height > 156)
-            newHash = Zobrist.computeHashForLargeMaps(newPlayerPosition, newBoxPosition);
-        else
-            newHash = Zobrist.computeHash(newPlayerPosition, newBoxPosition);
+        newHash = Board.getWidth() * Board.getHeight() > 156 ?
+                Zobrist.computeHashForLargeMaps(newPlayerPosition, newBoxPosition) :
+                Zobrist.computeHash(newPlayerPosition, newBoxPosition);
 
         return new State(newBoxPosition, newPlayerPosition, newHash);
     }
