@@ -14,18 +14,30 @@ public class Node {
         this.tCost = gCost + hCost;
     }
 
+    /* Function that returns the path of the node.
+        @return path
+    */
     public String getPath() {
         return this.path;
     }
 
+    /* Function that returns the total costs of the node.
+        @return total cost
+    */
     public int getTCost() {
         return tCost;
     }
 
+    /* Function that returns the actual cost so far of the node.
+        @return gcost
+    */
     public int getGCost() {
         return gCost;
     }
 
+    /* Function that returns the state of the node.
+        @return state
+    */
     public State getState() {
         return state;
     }

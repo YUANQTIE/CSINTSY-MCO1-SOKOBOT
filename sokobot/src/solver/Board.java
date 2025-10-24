@@ -1,14 +1,4 @@
 package solver;
-/*
-0 - empty space
-1 - player
-2 - box
-3 - goal
-4 - wall
-5 - box on goal
-6 - player on goal
-*/
-
 public class Board {
     private final int[] board;
     private final char[][] mapData;
@@ -28,6 +18,9 @@ public class Board {
         this.goalPosition = new int[20];
     }
 
+    /* Function that converts the 2D map into a 1D array.
+        @return none
+    */
     public void setBoard() {
         int ctr = 0;
         int box_ctr = 0;
@@ -73,6 +66,13 @@ public class Board {
         playerPosition = player;
     }
 
+    /* Function that determines whether a box can be moved given a specified direction.
+        @param direction - direction to be checked
+        @param boxPosition - the position of the box
+        @param width - the width of the map
+        @param boxPositions - the position of the boxes
+        @return true if the box can be moved, otherwise false
+    */
     public boolean canMoveBox(String direction, int boxPosition, int width, int[] boxPositions) {
         boolean canMove = false;
         if (direction.equalsIgnoreCase("Up")) {
@@ -98,6 +98,13 @@ public class Board {
         return canMove;
     }
 
+    /* Function that returns whether a player is next to a box.
+        @param direction - direction to be checked
+        @param width - the width of the map
+        @param boxPosition - the position of the boxes
+        @param playerPosition - the position of the player
+        @return true if player is next to box, otherwise false
+    */
     public boolean isPlayerNextToBox(String direction, int width, int[] boxPosition, int playerPosition) {
         boolean checker = false;
         if (direction.equalsIgnoreCase("Up")) {
@@ -135,10 +142,19 @@ public class Board {
         return checker;
     }
 
+    /* Function that checks if the given position is a wall.
+        @tile - the position to be checked
+        @return true if it's a wall, otherwise false
+    */
     public boolean checkWall(int tile) {
         return board[tile] == 4;
     }
 
+    /* Function that checks if the given position is a box.
+        @param tile - the position to be checked
+        @param boxPosition -  the position of the boxes
+        @return box true if it is a box, otherwise false
+    */
     public boolean checkBox(int tile, int[] boxPosition) {
         for (int i = 0; i < numOfBoxes; i++)
             if (boxPosition[i] == tile)
@@ -146,6 +162,10 @@ public class Board {
         return false;
     }
 
+    /* Function that checks if a box is in a goal.
+        @param box - the box to be checked
+        @return true if box is in goal, otherwise false
+    */
     public boolean isInGoal(int box) {
         for (int i = 0; i < numOfBoxes; i++)
             if (goalPosition[i] == box)
@@ -153,30 +173,51 @@ public class Board {
         return false;
     }
 
+    /* Function that returns the goal positions of the board.
+        @return goal positions
+    */
     public int[] getGoalPosition() {
         return this.goalPosition;
     }
 
+    /* Function that returns the board/1D array.
+        @return board
+    */
     public int[] getBoard() {
         return this.board;
     }
 
+    /* Function that returns the width of the map.
+        @return width
+    */
     public static int getWidth(){
         return width;
     }
 
+    /* Function that returns the height of the map.
+        @return height
+    */
     public static int getHeight(){
         return height;
     }
 
+    /* Function that returns the number of boxes.
+        @return number of boxes
+    */
     public int getNumOfBoxes() {
         return this.numOfBoxes;
     }
 
+    /* Function that returns the player position.
+        @return player position
+    */
     public int getPlayerPosition() {
         return this.playerPosition;
     }
 
+    /* Function that returns the box positions.
+        @return box positions
+    */
     public int[] getBoxPosition() {
         return this.initialBoxPosition;
     }

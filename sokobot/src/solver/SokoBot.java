@@ -1,17 +1,13 @@
 package solver;
 import java.util.*;
 
-/*
-Movement:
-- width: up
-+ width: down
-- 1: left
-+ 1: right
- */
 public class SokoBot {
 
-    // BFS to get all player reachable positions
-    private boolean[] getUnoccupiedTiles(Board board) {
+    /* Function that finds and marks all the deadlock tiles in the board.
+        @param board - the 1-D board/map
+        @return boolean array containing all the marked tiles
+    */
+    private boolean[] getSimpleDeadlockTiles(Board board) {
         Queue<Integer> queue = new LinkedList<>();
         boolean[] reachable = new boolean[Board.getWidth() * Board.getHeight()];
         int boardSize = Board.getWidth() * Board.getHeight();
@@ -50,10 +46,15 @@ public class SokoBot {
         return deadlock;
     }
 
-    private Set<Long> getSimpleDeadlockedTiles(Board board){
+    /* Function that hashes all the deadlock tiles in the board.
+        @param board - the 1-D board/map
+        @return hashmap of all the deadlock tiles
+    */
+
+    private Set<Long> hashSimpleDeadlockedTiles(Board board){
         Set<Long> unvisited = new HashSet<>();
         int boardSize = Board.getHeight() * Board.getWidth();
-        boolean[] tileOccupied = getUnoccupiedTiles(board);
+        boolean[] tileOccupied = getSimpleDeadlockTiles(board);
 
         for (int i = 0; i < boardSize; i++) {
             if (tileOccupied[i]){
@@ -65,34 +66,28 @@ public class SokoBot {
     }
 
 
-    //checks if one box in a current state contains the same hash as a deadlocked spot
-    private boolean isolateBox(Board board, State state, Set<Long> deadlocked){
+    /* Function that checks if any of the boxes in a state contains the same hash as a deadlocked spot.
+        @param state - the state to be checked
+        @param deadlocked - the hashmap containing all deadlocked tiles
+        @return true if any box is deadlocked, otherwise false
+    */
+
+    private boolean isSimpleDeadlocked(State state, Set<Long> deadlocked){
         for (int box : state.getBoxPositions())
             if (deadlocked.contains(Zobrist.computeSingleBoxHash(box)))
                 return true; //a box is in a deadlocked spot
         return false; 
     }
 
-    /*public boolean isSimpleDeadlocked(Board board, int width, int[] boxPositions) {
-        for (int box : boxPositions) {
-            // Skip if the box is on a goal
-            if (board.isInGoal(box)) continue;
-
-            // Check if box is in a corner (two adjacent walls)
-            boolean up = board.checkWall(box - width);
-            boolean down = board.checkWall(box + width);
-            boolean left = board.checkWall(box - 1);
-            boolean right = board.checkWall(box + 1);
-
-            // If it's stuck in a corner and not on goal
-            if ((up && left) || (up && right) || (down && left) || (down && right)) {
-                return true;
-            }
-        }
-        return false;
-    }*/
+    /* Function that finds all the possible moves a player can make to reach and push every box.
+        @param width - the width of the map
+        @param board - the 1-D board/map
+        @param playerPosition - the position of the player
+        @param boxPositions - the positions of the boxes
+        @return all the possible moves
+    */
     
-    public ArrayList<Move> getAllPossibleMoves(int width, Board board, int playerPosition, int[] boxPositions) {
+    public ArrayList<Move> getAllPossibleMoves(int width, int playerPosition, Board board, int[] boxPositions) {
         ArrayList<Move> moves = new ArrayList<>();
         int boardSize = board.getBoard().length;
         boolean[] visited = new boolean[boardSize];
@@ -158,6 +153,12 @@ public class SokoBot {
         return moves;
     }
 
+    /* Function that determines if the puzzle is solved based on the state.
+        @param board - the 1-D board/map
+        @param state - the state of the map
+        @return true if all boxes are in goals, otherwise false
+    */
+
     public boolean isComplete(Board board, State state) {
         for (int box : state.getBoxPositions())
             if (!board.isInGoal(box))
@@ -165,103 +166,46 @@ public class SokoBot {
         return true; // all boxes are on goals
     }
 
-    public boolean isFreezeDeadlock(Board board, int width, int[] boxPositions) {
-        // Check if any box is frozen (cannot be pushed in any direction)
-        for (int i = 0; i < boxPositions.length; i++) {
-            int box = boxPositions[i];
-            if (board.isInGoal(box)) continue; // Skip boxes on goals
-            
-            // Check if this box is frozen (blocked on both axes)
-            if (isBoxFrozen(board, width, box, boxPositions, i, new HashSet<>()))
-                return true; // Found a frozen box not on goal = freeze deadlock
-        }
-        return false; // No frozen boxes found
-    }
-
-    /**
-     * Check if a box is frozen (blocked on both vertical and horizontal axes)
-     */
-    private boolean isBoxFrozen(Board board, int width, int box, int[] boxPositions, int currentBoxIndex, Set<Integer> checkedBoxes) {
-        // Avoid circular checks - if we've already checked this box, treat it as blocked
-        if (checkedBoxes.contains(currentBoxIndex))
-            return true; // Already checked this box, treat as blocked
-
-        checkedBoxes.add(currentBoxIndex);
-
-        // Check if box is blocked vertically
-        boolean blockedVertically = isBoxBlockedOnAxis(board, width, box, boxPositions, currentBoxIndex, true, checkedBoxes);
-        
-        // Check if box is blocked horizontally  
-        boolean blockedHorizontally = isBoxBlockedOnAxis(board, width, box, boxPositions, currentBoxIndex, false, checkedBoxes);
-
-        // Box is frozen if blocked on both axes
-        return blockedVertically && blockedHorizontally;
-    }
-
-    /**
-     * Check if a box is blocked on a specific axis (vertical or horizontal)
-     */
-    private boolean isBoxBlockedOnAxis(Board board, int width, int box, int[] boxPositions, int currentBoxIndex, boolean isVertical, Set<Integer> checkedBoxes) {
-        if (isVertical) {
-            // Check vertical axis (up and down)
-            boolean upBlocked = isPositionBlocked(board, width, box - width, boxPositions, currentBoxIndex, checkedBoxes);
-            boolean downBlocked = isPositionBlocked(board, width, box + width, boxPositions, currentBoxIndex, checkedBoxes);
-            return upBlocked && downBlocked;
-        } else {
-            // Check horizontal axis (left and right)
-            boolean leftBlocked = isPositionBlocked(board, width, box - 1, boxPositions, currentBoxIndex, checkedBoxes);
-            boolean rightBlocked = isPositionBlocked(board, width, box + 1, boxPositions, currentBoxIndex, checkedBoxes);
-            return leftBlocked && rightBlocked;
-        }
-    }
-
-    /**
-     * Check if a position is blocked (wall, out of bounds, or blocked box)
-     */
-    private boolean isPositionBlocked(Board board, int width, int position, int[] boxPositions, int currentBoxIndex, Set<Integer> checkedBoxes) {
-        int boardSize = board.getBoard().length;
-        
-        // Check 1: Out of bounds = blocked
-        if (position < 0 || position >= boardSize) return true;
-        
-        // Check 2: Wall = blocked
-        if (board.checkWall(position)) return true;
-
-        // Check 4: Box at position - check if that box is blocked
-        for (int i = 0; i < boxPositions.length; i++)
-            if (i != currentBoxIndex && boxPositions[i] == position)
-                // Found a box at this position - check if it's blocked
-                return isBoxFrozen(board, width, position, boxPositions, i, checkedBoxes);
-        
-        return false; // Position is not blocked
-    }
+    /* Function that computes the manhattan distance of a box and goal.
+        @param box - the position of the box
+        @param goal - the position of the goal
+        @param width - the width of the map
+        @return manhattan distance of box and goal
+    */
 
     public int manhattanDistance(int box, int goal, int width){
         //compute x-component and y-component of the manhattan distance
         int xComponent = Math.abs((box % width) - (goal % width));
-        int yComponenent = Math.abs((box / width) - (goal / width)); // we only need to add kasi the number of tiles is exactly the distance
-        return xComponent + yComponenent;
+        int yComponent = Math.abs((box / width) - (goal / width));
+        return xComponent + yComponent;
     }
 
-    public int getHeuristic(Board board, int[] boxPositions, int width) {
+    /* Function that determines the heuristic value based on the distance of every box to every goal.
+        @param board - the 1-D board/map
+        @param boxPositions - the positions of the boxes
+        @param width - width of the map
+        @return heuristic value
+    */
+
+    public int getHeuristic(int width, Board board, int[] boxPositions) {
         List<int[]> list = new ArrayList<>(); //each int[] contains {distance, box, goal}
         int h = 0;
 
-        // Computes the distance of every box to every goal
-        for (int i = 0; i < board.getNumOfBoxes(); i++) {
-            for (int j = 0; j < board.getNumOfBoxes(); j++) {
+        //Computes the distance of every box to every goal
+        for(int i=0; i< board.getNumOfBoxes(); i++) {
+            for(int j=0; j<board.getNumOfBoxes(); j++) {
                 int dist = manhattanDistance(boxPositions[i], board.getGoalPosition()[j], width);
                 list.add(new int[]{dist, i, j});
             }
         }
 
-        // Sort by ascending distance
+        //Sort by ascending distance
         list.sort(Comparator.comparingInt(dist -> dist[0]));
 
         ArrayList<Integer> matchedBoxes = new ArrayList<>();
         ArrayList<Integer> matchedGoals = new ArrayList<>();
 
-        for (int[] d: list) {
+        for(int[] d: list) {
             int dist = d[0];
             int box = d[1];
             int goal = d[2];
@@ -273,13 +217,16 @@ public class SokoBot {
         }
 
         //For unmatched boxes, assign them to nearest goal
-        for (int i = 0; i < board.getNumOfBoxes(); i++) {
-            if (!matchedBoxes.contains(i)) {
+        for(int i=0; i<board.getNumOfBoxes(); i++) {
+            int boxPos = boxPositions[i];
+            if(!matchedBoxes.contains(i)) {
                 int min = Integer.MAX_VALUE;
-                for (int j = 0; i < board.getNumOfBoxes(); j++) {
+                for(int j=0; j<board.getNumOfBoxes(); j++) {
                     int goal = board.getGoalPosition()[j];
-                    int d = manhattanDistance(i, goal, width);
-                    if (d < min) min = d;
+                    int d = manhattanDistance(boxPos, goal, width);
+                    if(d < min) {
+                        min = d;
+                    }
                 }
                 h += min;
             }
@@ -288,6 +235,15 @@ public class SokoBot {
         return h;
     }
 
+
+    /* Function that solves the puzzle using A* search and returns the path.
+        @param width - the width of the map
+        @param height - the height of the map
+        @param mapData - contains the wall and goal details of the map
+        @param itemsData - contains the player and box details of the map
+        @return the path
+    */
+
     public String solveSokobanPuzzle(int width, int height, char[][] mapData, char[][] itemsData) {
         Board board = new Board(width, height, mapData, itemsData);
         board.setBoard();
@@ -295,12 +251,12 @@ public class SokoBot {
         Zobrist.initialize(width, height);
 
         Set<Long> visited = new HashSet<>();
-        Set<Long> deadlocked = getSimpleDeadlockedTiles(board);
+        Set<Long> deadlocked = hashSimpleDeadlockedTiles(board);
         
         Queue<Node> queue = new PriorityQueue<>(Comparator.comparingInt(Node::getTCost));
         long startHash = Zobrist.computeHash(board.getPlayerPosition(), board.getBoxPosition());
         State start = new State(board.getBoxPosition(), board.getPlayerPosition(), startHash);
-        int h = getHeuristic(board, start.getBoxPositions(), width);
+        int h = getHeuristic(width, board, start.getBoxPositions());
         Node node = new Node(start, "", 0, h);
 
         //Add initial state to visited queue
@@ -311,32 +267,19 @@ public class SokoBot {
             Node curr = queue.poll();
             if (isComplete(board, curr.getState())) return curr.getPath();
 
-            for (Move move : getAllPossibleMoves(width, board, curr.getState().getPlayerPosition(), curr.getState().getBoxPositions())) {
+            for (Move move : getAllPossibleMoves(width, curr.getState().getPlayerPosition(), board, curr.getState().getBoxPositions())) {
                 State next = curr.getState().apply(move);
 
                 if (visited.contains(next.getHash())) continue;
-                if (isolateBox(board, next, deadlocked)) continue;
-
-                else if (isFreezeDeadlock(board, width, next.getBoxPositions())) {
-                    deadlocked.add(next.getHash());
-                    continue;
-                }
+                if (isSimpleDeadlocked(next, deadlocked)) continue;
 
                 int g = curr.getGCost() + 1;
-                h = getHeuristic(board, next.getBoxPositions(), width);
+                h = getHeuristic(width, board, next.getBoxPositions());
                 visited.add(next.getHash());
                 node = new Node(next, curr.getPath() + move.getPath(), g, h);
                 queue.add(node);
             }
         }
-
-        System.out.print("New Box positions: ");
-        for(int i = 0; i < board.getNumOfBoxes(); i++)
-            System.out.print(node.getState().getBoxPositions()[i] + " ");
-
-        System.out.println();
-        System.out.println("Path: " + node.getPath());
-        System.out.println();
         return node.getPath();
     }
 }
